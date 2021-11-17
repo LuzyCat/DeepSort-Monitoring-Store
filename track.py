@@ -23,13 +23,15 @@ import platform
 import shutil
 import time
 from pathlib import Path
+import numpy as np
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
 
 from customerObject import Customer
-import numpy as np
+from dataSender import ThreadedClient
 
+COUNT_THRESHOLD = 2
 
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 # crop box
@@ -59,7 +61,6 @@ def bbox_rel(*xyxy):
     w = bbox_w
     h = bbox_h
     return x_c, y_c, w, h
-
 
 def compute_color_for_labels(label):
     """
@@ -134,86 +135,90 @@ def draw_line(img):
     cv2.line(img, (in_line[0][0], in_line[0][1]), (in_line[1][0], in_line[1][1]), (0, 0, 255), 2, cv2.LINE_AA)
     cv2.line(img, (out_line[0][0], out_line[0][1]), (out_line[1][0], out_line[1][1]), (255, 0, 0), 2, cv2.LINE_AA)
     
-def check_inout_inline(customer):
-    [px, py] = customer.central
-    ud = customer.getDirection_ud()
-    rl = customer.getDirection_rl()
-    count_in = 0
-    count_out=  0
-    if case == 1:
-        if abs(py - in_line[0][1]) <= 5 and px >= in_line[0][0] and px <= in_line[1][0]:
-            if ud == 1:
-                # up & out
-                count_out =1
-            elif ud == 2:
-                # down & in
-                count_in = 1
-            
-    elif case == 2:
-        if abs(py - in_line[0][1]) <= 5 and px >= in_line[0][0] and px <= in_line[1][0]:
-            if ud == 1:
-                # up & in
-                count_in =1
-            elif ud == 2:
-                # down & out
-                count_out = 1
-    elif case == 3:
-        if abs(px - in_line[0][0]) <= 5 and py >= in_line[0][1] and py <= in_line[1][1]:
-            if rl == 1:
-                # right & in
-                count_in =1
-            elif rl == 2:
-                # left & out
-                count_out = 1
-    elif case == 4:
-        if abs(px - in_line[0][0]) <= 5 and py >= in_line[0][1] and py <= in_line[1][1]:
-            if rl == 2:
-                # left & in
-                count_in =1
-            elif rl == 1:
-                # right & out
-                count_out = 1
-    return count_in, count_out
+def check_inout_line(customer, type=0):
+    """Check Line In & Out
 
-def check_inout_outline(customer):
+    Args:
+        customer ([CustomerObject])
+        type (int, optional): If entrance to 0, exit to 1. Defaults to 0.
+
+    Returns:
+        int, int: In count, Out count
+    """
     [px, py] = customer.central
     ud = customer.getDirection_ud()
     rl = customer.getDirection_rl()
     count_in = 0
     count_out=  0
-    if case == 1:
-        if abs(py - out_line[0][1]) <= 5 and px >= out_line[0][0] and px <= out_line[1][0]:
-            if ud == 2:
-                # down & out
-                count_out =1
-            elif ud == 1:
-                # up & in
-                count_in = 1
-            
-    elif case == 2:
-        if abs(py - out_line[0][1]) <= 5 and px >= out_line[0][0] and px <= out_line[1][0]:
-            if ud == 1:
-                # up & out
-                count_out =1
-            elif ud == 2:
-                # down & in
-                count_in = 1
-    elif case == 3:
-        if abs(px - out_line[0][0]) <= 5 and py >= out_line[0][1] and py <= out_line[1][1]:
-            if rl == 1:
-                # right & out
-                count_out =1
-            elif rl == 2:
-                # left & in
-                count_in = 1
-    elif case == 4:
-        if abs(px - out_line[0][0]) <= 5 and py >= out_line[0][1] and py <= out_line[1][1]:
-            if rl == 2:
-                # left & out
-                count_out =1
-            elif rl == 1:
-                # right & in
-                count_in = 1
+    
+    if 0:
+        if case == 1:
+            if abs(py - in_line[0][1]) <= 5 and px >= in_line[0][0] and px <= in_line[1][0]:
+                if ud == 1:
+                    # up & out
+                    count_out =1
+                elif ud == 2:
+                    # down & in
+                    count_in = 1
+                
+        elif case == 2:
+            if abs(py - in_line[0][1]) <= 5 and px >= in_line[0][0] and px <= in_line[1][0]:
+                if ud == 1:
+                    # up & in
+                    count_in =1
+                elif ud == 2:
+                    # down & out
+                    count_out = 1
+        elif case == 3:
+            if abs(px - in_line[0][0]) <= 5 and py >= in_line[0][1] and py <= in_line[1][1]:
+                if rl == 1:
+                    # right & in
+                    count_in =1
+                elif rl == 2:
+                    # left & out
+                    count_out = 1
+        elif case == 4:
+            if abs(px - in_line[0][0]) <= 5 and py >= in_line[0][1] and py <= in_line[1][1]:
+                if rl == 2:
+                    # left & in
+                    count_in =1
+                elif rl == 1:
+                    # right & out
+                    count_out = 1
+    elif 1:
+        if case == 1:
+            if abs(py - out_line[0][1]) <= 5 and px >= out_line[0][0] and px <= out_line[1][0]:
+                if ud == 2:
+                    # down & out
+                    count_out =1
+                elif ud == 1:
+                    # up & in
+                    count_in = 1  
+        elif case == 2:
+            if abs(py - out_line[0][1]) <= 5 and px >= out_line[0][0] and px <= out_line[1][0]:
+                if ud == 1:
+                    # up & out
+                    count_out =1
+                elif ud == 2:
+                    # down & in
+                    count_in = 1
+        elif case == 3:
+            if abs(px - out_line[0][0]) <= 5 and py >= out_line[0][1] and py <= out_line[1][1]:
+                if rl == 1:
+                    # right & out
+                    count_out =1
+                elif rl == 2:
+                    # left & in
+                    count_in = 1
+        elif case == 4:
+            if abs(px - out_line[0][0]) <= 5 and py >= out_line[0][1] and py <= out_line[1][1]:
+                if rl == 2:
+                    # left & out
+                    count_out =1
+                elif rl == 1:
+                    # right & in
+                    count_in = 1
+        
     return count_in, count_out
     
 def draw_ROI(img, n_cst, n_vst, d_time, count_in, count_out):
@@ -252,7 +257,6 @@ def draw_ROI(img, n_cst, n_vst, d_time, count_in, count_out):
     # # cv2.putText(img, label_inout, (ROI[-1][0] + 2, ROI[-2][1] + labelsize[0][1]*3 + 50), cv2.FONT_HERSHEY_DUPLEX, 0.5, [255, 255, 255], 1)
     # cv2.putText(img, label_inout, (x + 2, y + labelsize[0][1]*3 + 30), cv2.FONT_HERSHEY_DUPLEX, 0.5, [0, 0, 0], 1)
 
-
 def on_mouse(event, x, y, flags, params):
     global IsSelected      
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -277,8 +281,6 @@ def RepresentsInt(s):
     except ValueError:
         return False
 
-
-
 def detect(opt):
     out, source, yolo_weights, deep_sort_weights, show_vid, save_vid, save_txt, imgsz, evaluate, half = \
         opt.output, opt.source, opt.yolo_weights, opt.deep_sort_weights, opt.show_vid, opt.save_vid, \
@@ -286,6 +288,14 @@ def detect(opt):
     webcam = source == '0' or '1' or '2' or source.startswith(
         'rtsp') or source.startswith('http') or source.endswith('.txt')
 
+    # initialize socket
+    # client = ThreadedClient()
+    # client.start_listen()
+    
+    ## for test
+    client = ThreadedClient(host="127.0.0.1", port=5000)
+    client.start_listen()
+    
     # initialize deepsort
     cfg = get_config()
     cfg.merge_from_file(opt.config_deepsort)
@@ -359,6 +369,7 @@ def detect(opt):
     timeRecord = []
     count_in = 0
     count_out = 0
+    
 
     for frame_idx, (path, img, im0s, vid_cap) in enumerate(dataset):
         img = torch.from_numpy(img).to(device)
@@ -436,8 +447,8 @@ def detect(opt):
                                 n_visited = n_visited + 1
                                 CustomerList[id].visit(time.time())
                                 remainedCustomers[id] = True
-                                c_iin, c_iout = check_inout_inline(CustomerList[id])
-                                c_oin, c_oout = check_inout_outline(CustomerList[id])
+                                c_iin, c_iout = check_inout_line(CustomerList[id], 0)
+                                c_oin, c_oout = check_inout_line(CustomerList[id], 1)
                             # print("remainedCustomers len: ", len(remainedCustomers))
                             
                         else:
@@ -445,8 +456,8 @@ def detect(opt):
                                 in_time = CustomerList[id].getVisitTime()
                                 out_time = time.time()
                                 CustomerList[id].leave(out_time)
-                                c_iin, c_iout = check_inout_inline(CustomerList[id])
-                                c_oin, c_oout = check_inout_outline(CustomerList[id])
+                                c_iin, c_iout = check_inout_line(CustomerList[id], 0)
+                                c_oin, c_oout = check_inout_line(CustomerList[id], 1)
                                 del remainedCustomers[id]
                                 timeRecord.append(out_time - in_time)
 
@@ -475,6 +486,13 @@ def detect(opt):
 
             if len(timeRecord) != 0:
                 dwell_time = sum(timeRecord)/len(timeRecord)
+            
+            # # Network Protocol
+            # if n_customer >= COUNT_THRESHOLD:
+            #     client.add_message(str(n_customer))
+                
+            ### Per frame
+            client.add_message(str(n_customer))
 
             # Stream results
             im0 = annotator.result()
