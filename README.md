@@ -113,3 +113,9 @@ If you find this project useful in your research, please consider cite:
     year={2020}
 }
 ```
+
+## Quick Start
+1. open CMD
+2. cd C:\Users\keti\Desktop\Retail_monitoring_store\Yolov5_DeepSort_Pytorch
+3. conda activate yolo
+4. python track.py --img-size 320 --show-vid --save-vid --save-txt
