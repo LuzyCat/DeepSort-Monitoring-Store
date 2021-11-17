@@ -23,6 +23,7 @@ class ThreadedClient(threading.Thread):
                 pass
     def start_listen(self):
         t = threading.Thread(target=self.listen)
+        t.daemon = True
         t.start()
         print("START Client")
     def add_message(self, msg):

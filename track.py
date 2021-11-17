@@ -31,7 +31,7 @@ import torch.backends.cudnn as cudnn
 from customerObject import Customer
 from dataSender import ThreadedClient
 
-COUNT_THRESHOLD = 2
+COUNT_THRESHOLD = 1
 
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 # crop box
@@ -289,12 +289,9 @@ def detect(opt):
         'rtsp') or source.startswith('http') or source.endswith('.txt')
 
     # initialize socket
-    # client = ThreadedClient()
-    # client.start_listen()
-    
-    ## for test
-    client = ThreadedClient(host="127.0.0.1", port=5000)
+    client = ThreadedClient()
     client.start_listen()
+    play_trig = -1
     
     # initialize deepsort
     cfg = get_config()
@@ -487,12 +484,21 @@ def detect(opt):
             if len(timeRecord) != 0:
                 dwell_time = sum(timeRecord)/len(timeRecord)
             
-            # # Network Protocol
-            # if n_customer >= COUNT_THRESHOLD:
-            #     client.add_message(str(n_customer))
+            # Network Protocol
+            if n_customer >= COUNT_THRESHOLD:
+                if play_trig == -1:
+                    client.add_message('play')
+                    play_trig = 1
+                    print("Play")
+            elif play_trig == 1:
+                client.add_message('stop')
+                play_trig = -1
+                print("Stop")
+            else:
+                play_trig = -1
                 
             ### Per frame
-            client.add_message(str(n_customer))
+            # client.add_message(str(n_customer))
 
             # Stream results
             im0 = annotator.result()
@@ -510,7 +516,9 @@ def detect(opt):
 
                 cv2.setMouseCallback(p, on_mouse, 0)
                 if cv2.waitKey(1) == ord('q'):  # q to quit
-                    raise StopIteration
+                    # raise StopIteration
+                    quit()
+
                 if cv2.waitKey(1) == ord('r'):  # r to reset
                     n_customer = 0
                     n_visited = 0
