@@ -18,6 +18,7 @@ from yolov5.utils.plots import Annotator, colors
 from deep_sort_pytorch.utils.parser import get_config
 from deep_sort_pytorch.deep_sort import DeepSort
 import argparse
+import threading
 import os
 import platform
 import shutil
@@ -31,7 +32,7 @@ import torch.backends.cudnn as cudnn
 from customerObject import Customer
 from dataSender import ThreadedClient
 
-COUNT_THRESHOLD = 1
+COUNT_THRESHOLD = 2
 
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 # crop box
@@ -40,6 +41,7 @@ in_line = []
 out_line = []
 case = 0
 IsSelected = False
+n_customer = 0
 
 def check_in(x, y):
     # (ROI[-2][0], ROI[-2][1]), (ROI[-1][0], ROI[-1][1])
@@ -292,6 +294,7 @@ def detect(opt):
     client = ThreadedClient()
     client.start_listen()
     play_trig = -1
+    count_time = 0
     
     # initialize deepsort
     cfg = get_config()
@@ -484,19 +487,25 @@ def detect(opt):
             if len(timeRecord) != 0:
                 dwell_time = sum(timeRecord)/len(timeRecord)
             
-            # Network Protocol
-            if n_customer >= COUNT_THRESHOLD:
-                if play_trig == -1:
-                    client.add_message('play')
+            if n_customer >= 1:
+                if count_time < 10:
+                    count_time += 1
+                    continue
+                else:
+                    if n_customer >= COUNT_THRESHOLD:
+                        client.add_message('play/')
+                    else:
+                        vod_num = str(1) # 이후에 age/gender에 따른 영상 번호로 변경
+                        msg = 'play/' + vod_num
+                        client.add_message(msg)
                     play_trig = 1
-                    print("Play")
             elif play_trig == 1:
-                client.add_message('stop')
+                client.add_message('stop/')
                 play_trig = -1
-                print("Stop")
+                count_time = 0
             else:
                 play_trig = -1
-                
+                count_time = 0
             ### Per frame
             # client.add_message(str(n_customer))
 
@@ -567,7 +576,7 @@ if __name__ == '__main__':
     # file/folder, 0 for webcam
     parser.add_argument('--source', type=str, default='0', help='source')
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
-    parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
+    parser.add_argument('--img-size', type=int, default=320, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.5, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
