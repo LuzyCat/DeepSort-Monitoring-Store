@@ -487,25 +487,7 @@ def detect(opt):
             if len(timeRecord) != 0:
                 dwell_time = sum(timeRecord)/len(timeRecord)
             
-            if n_customer >= 1:
-                if count_time < 10:
-                    count_time += 1
-                    continue
-                else:
-                    if n_customer >= COUNT_THRESHOLD:
-                        client.add_message('play/')
-                    else:
-                        vod_num = str(1) # 이후에 age/gender에 따른 영상 번호로 변경
-                        msg = 'play/' + vod_num
-                        client.add_message(msg)
-                    play_trig = 1
-            elif play_trig == 1:
-                client.add_message('stop/')
-                play_trig = -1
-                count_time = 0
-            else:
-                play_trig = -1
-                count_time = 0
+            
             ### Per frame
             # client.add_message(str(n_customer))
 
@@ -561,6 +543,28 @@ def detect(opt):
                     vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
                 vid_writer.write(im0)
 
+            if n_customer >= 1:
+                if count_time < 30:
+                    count_time += 1
+                    continue
+                else:
+                    if n_customer >= COUNT_THRESHOLD:
+                        client.add_message('play/')
+                        count_time = 0
+                    else:
+                        vod_num = str(1) # 이후에 age/gender에 따른 영상 번호로 변경
+                        msg = 'play/' + vod_num
+                        client.add_message(msg)
+                        count_time = 0
+                    play_trig = 1
+            elif play_trig == 1:
+                client.add_message('stop/')
+                play_trig = -1
+                count_time = 0
+            else:
+                play_trig = -1
+                count_time = 0
+            
     if save_txt or save_vid:
         print('Results saved to %s' % os.getcwd() + os.sep + out)
         if platform == 'darwin':  # MacOS
