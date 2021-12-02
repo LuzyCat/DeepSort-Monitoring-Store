@@ -32,7 +32,7 @@ import torch.backends.cudnn as cudnn
 from customerObject import Customer
 from dataSender import ThreadedClient
 
-COUNT_THRESHOLD = 1
+COUNT_THRESHOLD = 2
 
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 # crop box
@@ -543,6 +543,7 @@ def detect(opt):
 
                     vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
                 vid_writer.write(im0)
+                
             if network:
                 # send message
                 if n_customer >= 1:
@@ -603,7 +604,7 @@ if __name__ == '__main__':
     # foot tracker
     parser.add_argument("--foot", default=True, type=bool, help='track foot position')
     # network
-    parser.add_argument("--network", default=False, type=bool, help='open client socket')
+    parser.add_argument("--network", default=True, type=bool, help='open client socket')
     args = parser.parse_args()
     args.img_size = check_img_size(args.img_size)
 

@@ -3,8 +3,8 @@ import threading
 import sys
 import time
 
-# IP = "192.168.1.101"
-IP = 'localhost'
+IP = "192.168.1.101"
+# IP = 'localhost'
 PORT = 8987
 
 class ThreadedClient(threading.Thread):
@@ -20,7 +20,7 @@ class ThreadedClient(threading.Thread):
         while True:
             try:
                 self.send_message()
-                # recv_msg = self.socket.recv(4096)
+                recv_msg = self.socket.recv(4096)
             except socket.timeout:
                 pass
     def start_listen(self):
@@ -34,6 +34,7 @@ class ThreadedClient(threading.Thread):
         if self.msg != "":
             # self.socket.sendto(self.msg.encode('utf-8'), (self.host, self.port))
             self.socket.send(self.msg.encode('utf-8'))
+            print(">>>>>>>>>>>>>>", self.msg)
             self.msg = ""
 
 # class ThreadedClient(threading.Thread):
