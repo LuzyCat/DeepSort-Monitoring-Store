@@ -284,17 +284,18 @@ def RepresentsInt(s):
         return False
 
 def detect(opt):
-    out, source, yolo_weights, deep_sort_weights, show_vid, save_vid, save_txt, imgsz, evaluate, half = \
+    out, source, yolo_weights, deep_sort_weights, show_vid, save_vid, save_txt, imgsz, evaluate, half, network = \
         opt.output, opt.source, opt.yolo_weights, opt.deep_sort_weights, opt.show_vid, opt.save_vid, \
-            opt.save_txt, opt.img_size, opt.evaluate, opt.half
+            opt.save_txt, opt.img_size, opt.evaluate, opt.half, opt.network
     webcam = source == '0' or '1' or '2' or source.startswith(
         'rtsp') or source.startswith('http') or source.endswith('.txt')
 
-    # initialize socket
-    client = ThreadedClient()
-    client.start_listen()
-    play_trig = -1
-    count_time = 0
+    if network:
+        # initialize socket
+        client = ThreadedClient()
+        client.start_listen()
+        play_trig = -1
+        count_time = 0
     
     # initialize deepsort
     cfg = get_config()
@@ -542,30 +543,30 @@ def detect(opt):
 
                     vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
                 vid_writer.write(im0)
-
-            # send message
-            if n_customer >= 1:
-                if count_time < 30:
-                    count_time += 1
-                    continue
-                else:
-                    if n_customer >= COUNT_THRESHOLD:
-                        client.add_message('play/')
-                        count_time = 0
+            if network:
+                # send message
+                if n_customer >= 1:
+                    if count_time < 30:
+                        count_time += 1
+                        continue
                     else:
-                        vod_num = str(1) # 이후에 age/gender에 따른 영상 번호로 변경
-                        msg = 'play/' + vod_num
-                        client.add_message(msg)
-                        count_time = 0
-                    play_trig = 1
-            elif play_trig == 1:
-                client.add_message('stop/')
-                play_trig = -1
-                count_time = 0
-            else:
-                play_trig = -1
-                count_time = 0
-            
+                        if n_customer >= COUNT_THRESHOLD:
+                            client.add_message('play/')
+                            count_time = 0
+                        else:
+                            vod_num = str(1) # 이후에 age/gender에 따른 영상 번호로 변경
+                            msg = 'play/' + vod_num
+                            client.add_message(msg)
+                            count_time = 0
+                        play_trig = 1
+                elif play_trig == 1:
+                    client.add_message('stop/')
+                    play_trig = -1
+                    count_time = 0
+                else:
+                    play_trig = -1
+                    count_time = 0
+                
     if save_txt or save_vid:
         print('Results saved to %s' % os.getcwd() + os.sep + out)
         if platform == 'darwin':  # MacOS
@@ -591,7 +592,7 @@ if __name__ == '__main__':
     parser.add_argument('--save-vid', action='store_true', help='save video tracking results')
     parser.add_argument('--save-txt', action='store_true', help='save MOT compliant results to *.txt')
     # class 0 is person, 1 is bycicle, 2 is car... 79 is oven
-    parser.add_argument('--classes', default=1, nargs='+', type=int, help='filter by class: --class 0, or --class 16 17')
+    parser.add_argument('--classes', default=0, nargs='+', type=int, help='filter by class: --class 0, or --class 16 17')
     parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
     parser.add_argument('--augment', action='store_true', help='augmented inference')
     parser.add_argument('--evaluate', action='store_true', help='augmented inference')
@@ -601,6 +602,8 @@ if __name__ == '__main__':
     parser.add_argument("--rotate", default=False, type=bool, help="rotate video 90")
     # foot tracker
     parser.add_argument("--foot", default=True, type=bool, help='track foot position')
+    # network
+    parser.add_argument("--network", default=False, type=bool, help='open client socket')
     args = parser.parse_args()
     args.img_size = check_img_size(args.img_size)
 
