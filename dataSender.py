@@ -3,7 +3,7 @@ import threading
 import sys
 import time
 
-IP = "192.168.1.101"
+IP = "192.168.1.54"
 # IP = 'localhost'
 PORT = 8987
 

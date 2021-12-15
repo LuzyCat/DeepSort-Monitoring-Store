@@ -31,6 +31,7 @@ import torch.backends.cudnn as cudnn
 
 from customerObject import Customer
 from dataSender import ThreadedClient
+from dataServer import ServerSocket
 
 COUNT_THRESHOLD = 2
 
@@ -289,11 +290,12 @@ def detect(opt):
             opt.save_txt, opt.img_size, opt.evaluate, opt.half, opt.network
     webcam = source == '0' or '1' or '2' or source.startswith(
         'rtsp') or source.startswith('http') or source.endswith('.txt')
-
+ 
     if network:
         # initialize socket
         client = ThreadedClient()
         client.start_listen()
+        server = ServerSocket()
         play_trig = -1
         count_time = 0
     
@@ -555,7 +557,7 @@ def detect(opt):
                             client.add_message('play/')
                             count_time = 0
                         else:
-                            vod_num = str(1) # 이후에 age/gender에 따른 영상 번호로 변경
+                            vod_num = str(server.getRecentRecogResult()) # 이후에 age/gender에 따른 영상 번호로 변경
                             msg = 'play/' + vod_num
                             client.add_message(msg)
                             count_time = 0
