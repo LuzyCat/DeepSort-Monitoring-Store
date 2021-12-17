@@ -28,12 +28,14 @@ import numpy as np
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
+import random
 
 from customerObject import Customer
 from dataSender import ThreadedClient
 from dataServer import ServerSocket
 
 COUNT_THRESHOLD = 2
+led_order = [0, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2] #아직 임의의 수
 
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 # crop box
@@ -43,6 +45,20 @@ out_line = []
 case = 0
 IsSelected = False
 n_customer = 0
+
+def getProduct(gender, age, count):
+    n = 0
+    if gender != -1:
+        n = gender * 5 + age
+    else:
+        n = random.randint(1, 10)
+    if count >= COUNT_THRESHOLD:
+        while True:
+            nn = random.randint(1, 10)
+            if nn != n:
+                n = nn
+                break
+    return n
 
 def check_in(x, y):
     # (ROI[-2][0], ROI[-2][1]), (ROI[-1][0], ROI[-1][1])
@@ -372,7 +388,8 @@ def detect(opt):
     timeRecord = []
     count_in = 0
     count_out = 0
-    
+    prev_count = 0
+    productNum = 0
 
     for frame_idx, (path, img, im0s, vid_cap) in enumerate(dataset):
         img = torch.from_numpy(img).to(device)
@@ -547,28 +564,25 @@ def detect(opt):
                 vid_writer.write(im0)
                 
             if network:
-                # send message
                 if n_customer >= 1:
-                    if count_time < 30:
-                        count_time += 1
-                        continue
-                    else:
-                        if n_customer >= COUNT_THRESHOLD:
-                            client.add_message('play/')
-                            count_time = 0
-                        else:
-                            vod_num = str(server.getRecentRecogResult()) # 이후에 age/gender에 따른 영상 번호로 변경
-                            msg = 'play/' + vod_num
-                            client.add_message(msg)
-                            count_time = 0
+                    if prev_count == 0 or (prev_count != n_customer and play_trig == 1):
+                        age, gender = server.getRecentRecogResult()
+                        productNum = getProduct(gender, age, n_customer)
+                        client.add_led_message(str(led_order[productNum]))
+                        msg = 'play/' + str(productNum)
+                        client.add_message(msg)
+                        prev_count = n_customer
                         play_trig = 1
+                        
                 elif play_trig == 1:
                     client.add_message('stop/')
+                    client.add_led_message('0')
                     play_trig = -1
-                    count_time = 0
+                    prev_count = 0
                 else:
                     play_trig = -1
-                    count_time = 0
+                    prev_count = 0
+                    
                 
     if save_txt or save_vid:
         print('Results saved to %s' % os.getcwd() + os.sep + out)

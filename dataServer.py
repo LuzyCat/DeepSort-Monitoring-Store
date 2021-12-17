@@ -38,9 +38,9 @@ class ServerSocket(threading.Thread):
         가장 최근에 인식한 age/gender 결과를 출력
         시간을 넣을까 고민되네
         """
-        if self.age != -1:
-            self.vod = self.gender * 5 + self.age
-        return self.vod
+        # if self.age != -1:
+        #     self.vod = self.gender * 5 + self.age
+        return self.gender, self.age
         
     def receiveMsg(self):
         
