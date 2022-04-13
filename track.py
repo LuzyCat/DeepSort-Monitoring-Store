@@ -35,7 +35,7 @@ from dataSender import ThreadedClient
 from dataServer import ServerSocket
 
 COUNT_THRESHOLD = 2
-led_order = [0, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2] #아직 임의의 수
+led_order = [0, 4, 4, 3, 2, 3, 4, 4, 1, 2, 1] #아직 임의의 수
 
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 # crop box
@@ -55,7 +55,7 @@ def getProduct(gender, age, count):
     if count >= COUNT_THRESHOLD:
         while True:
             nn = random.randint(1, 10)
-            if nn != n:
+            if led_order[nn] != led_order[n]:
                 n = nn
                 break
     return n
@@ -566,7 +566,7 @@ def detect(opt):
             if network:
                 if n_customer >= 1:
                     if prev_count == 0 or (prev_count != n_customer and play_trig == 1):
-                        age, gender = server.getRecentRecogResult()
+                        gender, age = server.getRecentRecogResult()
                         productNum = getProduct(gender, age, n_customer)
                         client.add_led_message(str(led_order[productNum]))
                         msg = 'play/' + str(productNum)
