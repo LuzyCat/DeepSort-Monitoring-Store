@@ -38,3 +38,5 @@ deep_sort_pytorch/utils/__pycache__/__init__.cpython-36.pyc
 deep_sort_pytorch/utils/__pycache__/__init__.cpython-38.pyc
 deep_sort_pytorch/utils/__pycache__/parser.cpython-36.pyc
 deep_sort_pytorch/utils/__pycache__/parser.cpython-38.pyc
+deep_sort/deep/checkpoint/osnet_ibn_x1_0_MSMT17.pth
+deep_sort/deep/checkpoint/osnet_x0_5_market1501.pth
