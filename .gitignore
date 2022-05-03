@@ -3,3 +3,4 @@ __pycache__/
 
 *.pt
 *.mp4
+deep_sort_pytorch/deep_sort/deep/checkpoint/ckpt.t7
