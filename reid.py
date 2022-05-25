@@ -23,19 +23,21 @@ class ClusterFeature:
             nearest_idx = np.argmin(distance)
             
             if exist_id != -1:
+                # if nearest_idx != exist_id-1 and distance[0, nearest_idx] < threshold:
+                #     print("If you need to Change ID?")
+                # return exist_id
                 if nearest_idx == exist_id-1 or distance[0, nearest_idx] >= threshold:
-                    # if cdist(feature_vec.reshape(1, -1), self.clusters[exist_id-1].reshape(1, -1), self.dist_metric) < threshold:
                     self.clusters_sizes[exist_id-1] += 1
                     self.clusters[exist_id-1] += (feature_vec - self.clusters[exist_id-1]) / self.clusters_sizes[exist_id-1]
-                    return exist_id
-            
-            if distance[0, nearest_idx] < threshold:
-                self.clusters_sizes[nearest_idx] += 1
-                self.clusters[nearest_idx] += (feature_vec - self.clusters[nearest_idx]) / self.clusters_sizes[nearest_idx]
-                return nearest_idx + 1
+                return exist_id
             else:
-                self.__add_new_cluster(feature_vec)
-                return len(self.clusters)
+                if distance[0, nearest_idx] < threshold:
+                    # self.clusters_sizes[nearest_idx] += 1
+                    # self.clusters[nearest_idx] += (feature_vec - self.clusters[nearest_idx]) / self.clusters_sizes[nearest_idx]
+                    return nearest_idx + 1
+                else:
+                    self.__add_new_cluster(feature_vec)
+                    return len(self.clusters)
     def get_clusters_matrix(self):
         return np.array(self.clusters).reshape(len(self.clusters), -1)
     def get_cluster_by_id(self, id):
@@ -59,6 +61,7 @@ class MultiReID:
         self.n_resources = n_resources
         self.match_id = []
         self.feature_avg = []
+        self.window = 10
         for x in range(0, n_resources):
             self.match_id.append(dict())
             self.feature_avg.append(dict())
@@ -89,7 +92,7 @@ class MultiReID:
             else:
                 # if exist_ids.get(id, -1) == -1:
                 #     self.feature_avg[c_id][id] = feature
-                # elif exist_ids[id] < window:
+                # elif exist_ids[id] < self.window:
                 #     self.feature_avg[c_id][id] += (feature - self.feature_avg[c_id][id]) / (exist_ids[id] + 1)
                 # else:
                 if self.match_id[c_id].get(id, -1) == -1:
@@ -105,7 +108,7 @@ class MultiReID:
                     fused_id[-1] = cluster_id + self.last_global_id
                 else:
                     cluster_id = self.feature_clusters.update(feature, self.dist_threshold, exist_id=self.match_id[c_id][id])
-                    # if cluster_id != self.match_id[c_id][id]:
+                    # if cluster_id != self.match_id[c_id][id] and cluster_id not in fused_id:
                     #     self.match_id[c_id][id] = cluster_id
                     # if exist_ids[id] % 10 == 0:
                     #     cluster_id = self.feature_clusters.update(feature, self.dist_threshold)

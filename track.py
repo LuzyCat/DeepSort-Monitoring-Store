@@ -510,9 +510,9 @@ def detect(opt):
 
             annotator = Annotator(im0, line_width=2, pil=not ascii)
             
-            if  frame_idx != 0 and frame_idx % 10000 == 0 and i == 0:
-                last_global = REID.get_last_global_id()
-                REID = MultiReID(nr_sources, dist_thresh=opt.reid_thres, init_global=last_global + 1)
+            # if  frame_idx != 0 and frame_idx % 10000 == 0 and i == 0:
+            #     last_global = REID.get_last_global_id()
+            #     REID = MultiReID(nr_sources, dist_thresh=opt.reid_thres, init_global=last_global + 1)
 
             if det is not None and len(det):
                 # Rescale boxes from img_size to im0 size
@@ -677,7 +677,7 @@ if __name__ == '__main__':
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.5, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
-    parser.add_argument('--reid-thres', type=float, default=0.2, help='person reidentification threshold') # 0.16
+    parser.add_argument('--reid-thres', type=float, default=0.16, help='person reidentification threshold') # 0.16
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
     parser.add_argument('--device', default='0', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--show-vid', action='store_true', help='display tracking video results')
