@@ -510,7 +510,7 @@ def detect(opt):
 
             annotator = Annotator(im0, line_width=2, pil=not ascii)
             
-            # if  frame_idx != 0 and frame_idx % 10000 == 0 and i == 0:
+            # if  frame_idx != 1 and frame_idx % 10000 == 1 and i == 0:
             #     last_global = REID.get_last_global_id()
             #     REID = MultiReID(nr_sources, dist_thresh=opt.reid_thres, init_global=last_global + 1)
 
@@ -567,7 +567,7 @@ def detect(opt):
                             _, px, py = draw_boxes(im0, bboxes, id, (0, 0), opt.foot)
                             # label = f'{id} {names[c]} {conf:.2f}'
                             # annotator.box_label(bboxes, label, color=colors(c, True))
-                            if save_crop:
+                            if save_crop and id > 0:
                                 txt_file_name = txt_file_name if (isinstance(path, list) and len(path) > 1) else ''
                                 save_one_box(bboxes, imc, file=save_dir / 'crops' / txt_file_name / names[c] / f'{id}' / f'{p.stem}.jpg', BGR=True)
                         
@@ -671,13 +671,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--yolo_model', nargs='+', type=str, default='crowdhuman_yolov5m.pt', help='model.pt path(s)')
     # parser.add_argument('--deep_sort_weights', type=str, default='deep_sort_pytorch/deep_sort/deep/checkpoint/ckpt.t7', help='ckpt.t7 path')
-    parser.add_argument('--deep_sort_model', type=str, default='osnet_x0_5_market1501')
+    parser.add_argument('--deep_sort_model', type=str, default='osnet_x1_0_market1501')
     parser.add_argument('--source', type=str, default='streams.txt', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.5, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
-    parser.add_argument('--reid-thres', type=float, default=0.16, help='person reidentification threshold') # 0.16
+    parser.add_argument('--reid-thres', type=float, default=0.17, help='person reidentification threshold') # 0.16
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
     parser.add_argument('--device', default='0', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--show-vid', action='store_true', help='display tracking video results')
