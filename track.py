@@ -488,7 +488,7 @@ def detect(opt):
                 p = Path(p)  # to Path
                 s += f'{i}: '
                 txt_file_name = p.name
-                log_file_name = 'log' + p.name
+                log_file_name = 'log_' + p.name
                 save_path = str(save_dir / p.name)  # im.jpg, vid.mp4, ...
             else:
                 p, im0, _ = path, im0s.copy(), getattr(dataset, 'frame', 0)
