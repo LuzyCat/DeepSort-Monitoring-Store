@@ -1,4 +1,1 @@
-http://root:Realketiketi34@192.168.1.201/mjpg/1/video.mjpg
-http://root:Realketiketi34@192.168.1.202/mjpg/1/video.mjpg
-http://root:Realketiketi34@192.168.1.203/mjpg/1/video.mjpg
-http://root:Realketiketi34@192.168.1.204/mjpg/1/video.mjpg
+0
