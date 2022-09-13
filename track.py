@@ -249,6 +249,7 @@ def detect(opt):
             
             if  frame_idx != 1 and frame_idx % 10000 == 1 and i == 0:
                 last_global = REID.get_last_global_id()
+                del REID
                 REID = MultiReID(nr_sources, dist_thresh=opt.reid_thres, init_global=last_global + 1)
 
             if det is not None and len(det):
@@ -284,7 +285,6 @@ def detect(opt):
                         local_id = output[4]
                         id = new_ID[j]
                         cls = output[5]
-                        
                         
                         if image_list[i].exist_ids.get(local_id, -1) == -1:
                             image_list[i].exist_ids[local_id] = 1
@@ -437,7 +437,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', default='0', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--show-vid', action='store_true', help='display tracking video results')
     parser.add_argument('--save-vid', action='store_true', help='save video tracking results')
-    parser.add_argument('--save-txt', action='store_false', help='save MOT compliant results to *.txt')
+    parser.add_argument('--save-txt', action='store_true', help='save MOT compliant results to *.txt')
     # class 0 is person, 1 is bycicle, 2 is car... 79 is oven
     parser.add_argument('--classes', default=0, nargs='+', type=int, help='filter by class: --class 0, or --class 16 17')
     parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')

@@ -45,8 +45,9 @@ def makeHeatmap(imgpth, txtpth, hist=7):
         res = line.split(' ')
         box = [int(x) for x in res[3:7]] # left, top, w, h
         ct = xywh_to_foot(box, width, height)
-        boxes.append(box) 
-        coords.append(ct)
+        if ct[1] < height -1:
+            boxes.append(box) 
+            coords.append(ct)
     boxes = np.asarray(boxes)
     coords = np.asarray(coords)
     
@@ -77,10 +78,10 @@ def makeHeatmap(imgpth, txtpth, hist=7):
     img = cv2.addWeighted(img, 1.0, heatmap_img, 0.7, 0)
     newname = 'Heatmap_' + path.stem
     cv2.imwrite(str(path.parent / newname) + '.png', img)
-    cv2.imshow(newname, img)
+    # cv2.imshow(newname, img)
     print('Heatmap Done.')
-    if cv2.waitKey(0) == ord('q'):
-        return
+    # if cv2.waitKey(0) == ord('q'):
+    #     return
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
