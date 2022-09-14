@@ -88,7 +88,7 @@ class MultiReID:
             fused_id.append(id * -1)
             if occlusion[i]:
                 if self.match_id[c_id].get(id, -1) != -1 and self.match_id[c_id][id] not in fused_id:
-                    fused_id[-1] = self.match_id[c_id][id] + self.last_global_id
+                    fused_id[-1] = self.match_id[c_id][id]
             else:
                 # if exist_ids.get(id, -1) == -1:
                 #     self.feature_avg[c_id][id] = feature
@@ -103,9 +103,9 @@ class MultiReID:
                             continue
                     if len(fused_id) > 0 and (cluster_id in fused_id):
                         continue
-                    self.match_id[c_id][id] = cluster_id
+                    self.match_id[c_id][id] = cluster_id + self.last_global_id
                     self.global_ids.append(cluster_id)
-                    fused_id[-1] = cluster_id + self.last_global_id
+                    fused_id[-1] = cluster_id
                 else:
                     cluster_id = self.feature_clusters.update(feature, self.dist_threshold, exist_id=self.match_id[c_id][id])
                     # if cluster_id != self.match_id[c_id][id] and cluster_id not in fused_id:
@@ -119,7 +119,7 @@ class MultiReID:
                     #     cluster_id = self.feature_clusters.update(feature, self.dist_threshold, exist_id=self.match_id[c_id][id])
                     # if exist_ids[id] % 10 == 0:
                     #     cluster_id = self.feature_clusters.update(feature, self.dist_threshold, exist_id=self.match_id[c_id][id])
-                    fused_id[-1] = self.match_id[c_id][id] + self.last_global_id
+                    fused_id[-1] = self.match_id[c_id][id]
         return fused_id
     
     def get_last_global_id(self):

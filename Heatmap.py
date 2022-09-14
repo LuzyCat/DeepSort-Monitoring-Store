@@ -85,7 +85,7 @@ def makeHeatmap(imgpth, txtpth, hist=7):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--img', type=str, default='./runs/track/crowdhuman_yolov5m_osnet_x1_0_market150120/0.png')
-    parser.add_argument('--txt', type=str, default='./runs/track/crowdhuman_yolov5m_osnet_x1_0_market150120/tracks/0.txt')
+    parser.add_argument('--img', type=str, default='./runs/track/crowdhuman_yolov5m_osnet_x1_0_market150127/192_168_1_201.png')
+    parser.add_argument('--txt', type=str, default='./runs/track/crowdhuman_yolov5m_osnet_x1_0_market150127/tracks/192_168_1_201.txt')
     args = parser.parse_args()
     makeHeatmap(args.img, args.txt)

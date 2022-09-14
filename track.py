@@ -39,7 +39,8 @@ ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 from customerObject import Customer
 from dataSender import ThreadedClient
 from dataServer import ServerSocket
-from reid import MultiReID
+# from reid import MultiReID
+from reid_v2 import MultiReID
 from iutils import draw_boxes, getCentralPoint
 from ImageInfo import ImageInfo
 from Heatmap import  makeHeatmap
@@ -78,16 +79,16 @@ def on_mouse(event, x, y, flags, param):
     #     param.IsSelected = False
     elif event == cv2.EVENT_RBUTTONDOWN:
         sbox = [x, y]
-        param.det_ROI.append(sbox)
+        param.nondet_ROI.append(sbox)
     elif event == cv2.EVENT_RBUTTONUP:
         sbox = [x, y]
-        param.det_ROI.append(sbox)
+        param.nondet_ROI.append(sbox)
 
 def detect(opt):
     out, source, yolo_model, deep_sort_model, show_vid, save_vid, save_txt, imgsz, evaluate, half, \
-        project, exist_ok, update, save_crop, network = \
+        project, exist_ok, update, save_crop, network, reid = \
         opt.output, opt.source, opt.yolo_model, opt.deep_sort_model, opt.show_vid, opt.save_vid, \
-        opt.save_txt, opt.imgsz, opt.evaluate, opt.half, opt.project, opt.exist_ok, opt.update, opt.save_crop, opt.network
+        opt.save_txt, opt.imgsz, opt.evaluate, opt.half, opt.project, opt.exist_ok, opt.update, opt.save_crop, opt.network, opt.reid
         
     webcam = (source == '0' or source == '1' or source =='2' or source.startswith(
         'rtsp') or source.startswith('http') or source.endswith('.txt'))
@@ -172,7 +173,8 @@ def detect(opt):
             image_list.append(ImageInfo([int(dataset.cap.get(4)), int(dataset.cap.get(3))]))
     outputs = [None] * nr_sources
     features = [None] * nr_sources
-    REID = MultiReID(nr_sources, dist_thresh=opt.reid_thres)
+    if reid:
+        REID = MultiReID(nr_sources, dist_thresh=opt.reid_thres, recent_max=opt.recent)
 
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
@@ -246,11 +248,11 @@ def detect(opt):
             imo = im0.copy()
 
             annotator = Annotator(im0, line_width=2, pil=not ascii)
-            
-            if  frame_idx != 1 and frame_idx % 10000 == 1 and i == 0:
-                last_global = REID.get_last_global_id()
-                del REID
-                REID = MultiReID(nr_sources, dist_thresh=opt.reid_thres, init_global=last_global + 1)
+            # if reid:
+            #     if  frame_idx != 1 and frame_idx % 10000 == 1 and i == 0:
+            #         last_global = REID.get_last_global_id()
+            #         del REID
+            #         REID = MultiReID(nr_sources, dist_thresh=opt.reid_thres, init_global=last_global + 1)
 
             if det is not None and len(det):
                 # Rescale boxes from img_size to im0 size
@@ -273,8 +275,11 @@ def detect(opt):
 
                 # draw boxes for visualization
                 if len(outputs[i]) > 0:
-                    # multi-camera fused reid
-                    new_ID = REID.update(i, outputs[i], features[i], image_list[i].exist_ids, image_list[i].det_ROI)
+                    if reid:
+                        # multi-camera fused reid
+                        # new_ID = REID.update(i, outputs[i], features[i], image_list[i].exist_ids, image_list[i].nondet_ROI)
+                        new_ID = REID.update(i, outputs[i], features[i], image_list[i].nondet_ROI)
+                        # REID.update(i, outputs[i], features[i], image_list[i].nondet_ROI)
                     t6 = time_sync()
                     dt[4] += t6 - t5
                     # customers in frame
@@ -283,7 +288,11 @@ def detect(opt):
     
                         bboxes = output[0:4]
                         local_id = output[4]
-                        id = new_ID[j]
+                        # id = local_id
+                        if reid:
+                            id = new_ID[j]
+                        else:
+                            id = local_id
                         cls = output[5]
                         
                         if image_list[i].exist_ids.get(local_id, -1) == -1:
@@ -438,6 +447,8 @@ if __name__ == '__main__':
     parser.add_argument('--show-vid', action='store_true', help='display tracking video results')
     parser.add_argument('--save-vid', action='store_true', help='save video tracking results')
     parser.add_argument('--save-txt', action='store_true', help='save MOT compliant results to *.txt')
+    parser.add_argument('--reid', action='store_true', help='do re-identification')
+    parser.add_argument('--network', action='store_true', help='open client socket')
     # class 0 is person, 1 is bycicle, 2 is car... 79 is oven
     parser.add_argument('--classes', default=0, nargs='+', type=int, help='filter by class: --class 0, or --class 16 17')
     parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
@@ -453,9 +464,9 @@ if __name__ == '__main__':
     parser.add_argument("--foot", default=True, type=bool, help='track foot position')
     parser.add_argument("--trajectory", '--traj', default=True, type=bool, help='draw trajectory to images')
     parser.add_argument("--capacity", '--cap', default=0, nargs='+', type=int, help='possibility of capacity')
+    parser.add_argument("--recent", default=50, type=int, help='max number of checkIds')
     # parser.add_argument('--heatmap', default=False, type=bool, help='draw heatmap to images')
     # network
-    parser.add_argument("--network", default=False, type=bool, help='open client socket')
     # args = parser.parse_args()
     # args.img_size = check_img_size(args.img_size)
     parser.add_argument('--visualize', action='store_true', help='visualize features')

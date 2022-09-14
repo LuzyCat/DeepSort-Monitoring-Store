@@ -21,7 +21,7 @@ class ImageInfo:
         self.out_line = []
         self.case = 0
         self.IsSelected = False
-        self.det_ROI = []
+        self.nondet_ROI = []
         
         self.n_customer = 0 ## 현재 방문자 수
         self.n_visited = 0 ## 현재까지의 방문자 수
@@ -181,8 +181,8 @@ class ImageInfo:
     def draw_ROI(self, img, cap=0):
         cv2.rectangle(img, (self.ROI[-2][0], self.ROI[-2][1]), (self.ROI[-1][0], self.ROI[-1][1]), (36, 255, 12), 1)
         
-        if len(self.det_ROI):
-            cv2.rectangle(img, (self.det_ROI[-2][0], self.det_ROI[-2][1]), (self.det_ROI[-1][0], self.det_ROI[-1][1]), (255, 255, 255), 1)
+        if len(self.nondet_ROI):
+            cv2.rectangle(img, (self.nondet_ROI[-2][0], self.nondet_ROI[-2][1]), (self.nondet_ROI[-1][0], self.nondet_ROI[-1][1]), (255, 255, 255), 1)
         
         label = "COUNT: " + str(self.n_customer) + "\nVISITED: " + str(self.n_visited) + "\nIN: %d\nOUT: %d" % (self.count_in, self.count_out)
         labelsize = []
@@ -221,7 +221,7 @@ class ImageInfo:
         self.CustomerList.clear()
         self.timeRecord.clear()
         self.ROI.clear()
-        self.det_ROI.clear()
+        self.nondet_ROI.clear()
         self.in_line.clear()
         self.out_line.clear()
         self.case = 0
