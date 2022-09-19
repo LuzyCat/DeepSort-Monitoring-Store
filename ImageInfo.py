@@ -178,10 +178,10 @@ class ImageInfo:
         cv2.line(img, (self.in_line[0][0], self.in_line[0][1]), (self.in_line[1][0], self.in_line[1][1]), (0, 0, 255), 2, cv2.LINE_AA)
         cv2.line(img, (self.out_line[0][0], self.out_line[0][1]), (self.out_line[1][0], self.out_line[1][1]), (255, 0, 0), 2, cv2.LINE_AA)
         
-    def draw_ROI(self, img, cap=0):
+    def draw_ROI(self, img, cap=10):
         cv2.rectangle(img, (self.ROI[-2][0], self.ROI[-2][1]), (self.ROI[-1][0], self.ROI[-1][1]), (36, 255, 12), 1)
         
-        if len(self.nondet_ROI):
+        if len(self.nondet_ROI) >= 2:
             cv2.rectangle(img, (self.nondet_ROI[-2][0], self.nondet_ROI[-2][1]), (self.nondet_ROI[-1][0], self.nondet_ROI[-1][1]), (255, 255, 255), 1)
         
         label = "COUNT: " + str(self.n_customer) + "\nVISITED: " + str(self.n_visited) + "\nIN: %d\nOUT: %d" % (self.count_in, self.count_out)

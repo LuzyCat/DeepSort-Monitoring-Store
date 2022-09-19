@@ -39,9 +39,9 @@ class FeatureMatrix:
     def compute_distance(self, qf, gf):
         distmat = metrics.compute_distance_matrix(qf, gf, self.dist_metric)
         return distmat.detach().cpu().numpy()
-# TODO: save recent features
+    
 class MultiReID:
-    def __init__(self, n_resources=1, occlusion_thresh=0.7, dist_thresh=0.2, recent_max = 50):
+    def __init__(self, n_resources=1, occlusion_thresh=0.5, dist_thresh=0.2, recent_max = 50):
         self.dist_metric = 'cosine'
         self.occlusion_threshold = occlusion_thresh
         self.distance_threshold = dist_thresh
@@ -52,7 +52,7 @@ class MultiReID:
             self.match_id.append(dict())
             self.feature_avg.append(dict())
         self.feature_matrix = FeatureMatrix(dist_thresh = self.distance_threshold, dist_metric = self.dist_metric, max=recent_max)
-    def update(self, path, outputs, features, non_detecion_box):
+    def update(self, path, outputs, features, non_detecion_box, person_confs):
         """
         update frame
 
@@ -80,7 +80,7 @@ class MultiReID:
                 local_id = output[4]
                 if self.match_id[cam_id].get(local_id, -1) != -1:
                     fused_id[i] = self.match_id[cam_id][local_id]
-                    if self.feature_matrix.init_global_id + min_cols[i] == fused_id[i] and \
+                    if self.feature_matrix.init_global_id + min_cols[i] == fused_id[i] and person_confs[i] > 0.8 and \
                         distance_matrix[i, min_cols[i]] < self.distance_threshold and occlusion_matrix[i] == False:
                         self.feature_matrix.update_feature(feature, min_cols[i])
                     distance_matrix[:, min_cols[i]] = 1.0
@@ -96,7 +96,8 @@ class MultiReID:
                             if self.feature_matrix.init_global_id + min_cols[i] in fused_id:
                                 fused_id[i] = local_id * -1
                             else:
-                                self.feature_matrix.update_feature(feature, min_cols[i])
+                                if person_confs[i] > 0.8:
+                                    self.feature_matrix.update_feature(feature, min_cols[i])
                                 fused_id[i] = self.feature_matrix.init_global_id + min_cols[i]
                                 self.match_id[cam_id][local_id] = fused_id[i]
                         else:

@@ -19,6 +19,7 @@ from yolov5.utils.plots import Annotator, colors, save_one_box
 from deep_sort.utils.parser import get_config
 from deep_sort.deep_sort import DeepSort
 
+# module
 import argparse
 import os
 import shutil
@@ -232,12 +233,12 @@ def detect(opt):
                 # video file
                 if source.endswith(VID_FORMATS):
                     txt_file_name = p.stem
-                    log_file_name = p.stem
+                    log_file_name = 'log_' + p.stem
                     save_path = str(save_dir / p.name)  # im.jpg, vid.mp4, ...
                 # folder with imgs
                 else:
                     txt_file_name = p.parent.name  # get folder name containing current img
-                    log_file_name = 'log' + p.parent.name
+                    log_file_name = 'log_' + p.parent.name
                     save_path = str(save_dir / p.parent.name)  # im.jpg, vid.mp4, ...
 
             log_path = str(save_dir / 'tracks' / log_file_name)
@@ -278,7 +279,7 @@ def detect(opt):
                     if reid:
                         # multi-camera fused reid
                         # new_ID = REID.update(i, outputs[i], features[i], image_list[i].exist_ids, image_list[i].nondet_ROI)
-                        new_ID = REID.update(i, outputs[i], features[i], image_list[i].nondet_ROI)
+                        new_ID = REID.update(i, outputs[i], features[i], image_list[i].nondet_ROI, confs)
                         # REID.update(i, outputs[i], features[i], image_list[i].nondet_ROI)
                     t6 = time_sync()
                     dt[4] += t6 - t5
@@ -360,7 +361,7 @@ def detect(opt):
                 #     image_list[i].density()
                 cv2.imshow(str(p), im0)
 
-                ## resized window
+                # ## resized window
                 # dst = cv2.resize(im0, dsize=(0, 0), fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
                 # cv2.imshow("resized", dst)
 
@@ -371,7 +372,7 @@ def detect(opt):
                     new_path = save_path + '_result'
                     filename =  str(Path(new_path).with_suffix('.png'))
                     cv2.imwrite(filename, im0)
-                    time.sleep(1)
+                    time.sleep(3)
                     quit()
                 elif key == ord('r'):  # r to reset
                     for info in image_list:
@@ -430,7 +431,6 @@ def detect(opt):
     if update:
         strip_optimizer(yolo_model)  # update model (to fix SourceChangeWarning)
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--yolo_model', nargs='+', type=str, default='crowdhuman_yolov5m.pt', help='model.pt path(s)')
@@ -456,14 +456,13 @@ if __name__ == '__main__':
     parser.add_argument('--update', action='store_true', help='update all models')
     parser.add_argument('--evaluate', action='store_true', help='augmented inference')
     parser.add_argument("--config_deepsort", type=str, default="deep_sort/configs/deep_sort.yaml")
-    parser.add_argument("--config_alphapose", type=str, default="alphapose/configs/alphapose.yaml")
     parser.add_argument("--half", action="store_true", help="use FP16 half-precision inference")
     # rotate 90
     parser.add_argument("--rotate", default=False, type=bool, help="rotate video 90")
     # foot tracker
-    parser.add_argument("--foot", default=True, type=bool, help='track foot position')
+        
     parser.add_argument("--trajectory", '--traj', default=True, type=bool, help='draw trajectory to images')
-    parser.add_argument("--capacity", '--cap', default=0, nargs='+', type=int, help='possibility of capacity')
+    parser.add_argument("--capacity", '--cap', default=5, nargs='+', type=int, help='possibility of capacity')
     parser.add_argument("--recent", default=50, type=int, help='max number of checkIds')
     # parser.add_argument('--heatmap', default=False, type=bool, help='draw heatmap to images')
     # network
